@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Birthday Greeting Website</title>
+    <title>Happy Birthday Aki!</title>
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     <style>
         * {
@@ -17,9 +17,15 @@
             text-align: center;
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
-            min-height: 100vh;
-            width: 100%;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+        
+        html {
+            height: 100%;
+            overflow: hidden;
         }
         
         #login {
@@ -92,9 +98,10 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             display: none;
+            overflow: hidden;
         }
         
         .images img {
@@ -161,10 +168,24 @@
         .balloon19 { left: 11vw; background: #ff1493; width: clamp(36px, 10vw, 60px); height: clamp(48px, 14vw, 80px); }
         .balloon20 { left: 17vw; background: #ff69b4; width: clamp(30px, 8vw, 50px); height: clamp(39px, 11vw, 70px); }
         
+        /* Additional viewport containment rules */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        /* Ensure all animations stay within bounds */
         @keyframes float {
             0% { transform: translateY(100vh) rotate(0deg); }
             50% { transform: translateY(50vh) rotate(5deg); }
-            100% { transform: translateY(-100px) rotate(0deg); }
+            100% { transform: translateY(0vh) rotate(0deg); }
         }
         
         @keyframes bounce {
@@ -172,15 +193,35 @@
             50% { transform: translateY(-20px); }
         }
         
+        /* Prevent any element from causing scroll */
+        .images, .balloon, #confetti-canvas {
+            max-width: 100vw;
+            max-height: 100vh;
+            overflow: hidden;
+        }
+        
         #confetti-canvas {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             pointer-events: none;
             display: none;
             z-index: 1;
+        }
+        
+        /* Ensure all positioned elements stay within viewport */
+        * {
+            box-sizing: border-box;
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        
+        /* Prevent any element from extending beyond viewport */
+        .balloon, .images img {
+            max-width: 100vw;
+            max-height: 100vh;
         }
         
         @media (max-width: 320px) {
@@ -465,12 +506,18 @@
         function positionBalloons() {
             const balloons = document.querySelectorAll('.balloon');
             const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
             const balloonWidth = 50; // Approximate balloon width
+            const balloonHeight = 70; // Approximate balloon height
             const spacing = (screenWidth - balloonWidth) / (balloons.length - 1);
             
             balloons.forEach((balloon, index) => {
                 const leftPosition = Math.max(0, Math.min(screenWidth - balloonWidth, index * spacing));
+                // Ensure balloons don't go below viewport
+                const topPosition = Math.max(0, Math.min(screenHeight - balloonHeight, Math.random() * (screenHeight * 0.8)));
+                
                 balloon.style.left = leftPosition + 'px';
+                balloon.style.top = topPosition + 'px';
             });
         }
 
@@ -550,7 +597,7 @@
                         posX += speedX;
                         posY += speedY;
 
-                      
+                        // Ensure images stay within viewport bounds
                         if (posX <= 0 || posX >= maxX) {
                             speedX = -speedX;
                             posX = Math.max(0, Math.min(posX, maxX));
@@ -560,6 +607,10 @@
                             posY = Math.max(0, Math.min(posY, maxY));
                         }
 
+                        // Additional boundary check to prevent overflow
+                        posX = Math.max(0, Math.min(posX, window.innerWidth - 100));
+                        posY = Math.max(0, Math.min(posY, window.innerHeight - 100));
+
                         img.style.left = posX + 'px';
                         img.style.top = posY + 'px';
                         requestAnimationFrame(updatePosition);
@@ -568,10 +619,10 @@
                 });
             }
             
-           
+            // Initial positioning
             updateImagePositions();
             
-           
+            // Handle window resize
             window.addEventListener('resize', updateImagePositions);
         }
 
